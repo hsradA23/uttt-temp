@@ -27,22 +27,41 @@ func Set_Current_Game(name string, game_id string) error {
 		}
 	}
 
+	// Check if the current user is already in a game
+	session_game_id, _ := redis_handler.RedisClient.HGet(redis_handler.Ctx, "sessions", name).Result()
+	if session_game_id != "" {
+		exists, err := redis_handler.RedisClient.Exists(redis_handler.Ctx, session_game_id).Result()
+		if exists == 1 {
+			err := redis_handler.RedisClient.RPush(redis_handler.Ctx, session_game_id+"-players", name).Err()
+			if err != nil {
+				return err
+			}
+
+		}
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
 	err := redis_handler.RedisClient.RPush(redis_handler.Ctx, game_id+"-players", name).Err()
 	if err != nil {
 		return err
 	}
+
 	return redis_handler.RedisClient.HSet(redis_handler.Ctx, "sessions", name, game_id).Err()
 }
 
 func Unset_Current_Game(name string) error {
 	game_id := Get_Game_By_Name(name)
-	num_players, _ := redis_handler.RedisClient.LLen(redis_handler.Ctx, game_id+"-players").Result()
 
 	redis_handler.RedisClient.LRem(redis_handler.Ctx, game_id+"-players", 0, name).Result()
+	num_players, _ := redis_handler.RedisClient.LLen(redis_handler.Ctx, game_id+"-players").Result()
 
-	if num_players == 1 {
+	if num_players == 0 {
 		redis_handler.RedisClient.Del(redis_handler.Ctx, game_id)
+		redis_handler.RedisClient.HDel(redis_handler.Ctx, "sessions", name)
 	}
 	fmt.Println("User removed.")
-	return redis_handler.RedisClient.HDel(redis_handler.Ctx, "sessions", name).Err()
+	return nil
 }
