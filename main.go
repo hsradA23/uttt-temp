@@ -30,18 +30,12 @@ func main() {
 
 	melodysession.MelodySession.HandleMessage(func(s *melody.Session, msg []byte) {
 		player_name := s.Request.Header.Get("Name")
-		if player_name == "" {
-			return
-		}
 		parser.Handle_Message(player_name, string(msg))
 		melodysession.MelodySession.Broadcast(msg)
 	})
 
 	melodysession.MelodySession.HandleDisconnect(func(s *melody.Session) {
 		player_name := s.Request.Header.Get("Name")
-		if player_name == "" {
-			return
-		}
 		router.Disconnect(player_name)
 	})
 
