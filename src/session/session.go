@@ -2,12 +2,13 @@ package session
 
 import (
 	"errors"
-	"fmt"
+	"uttt/src/game"
 	redis_handler "uttt/src/redis-handler"
 )
 
 func Get_Game_By_Name(name string) string {
 	game_id, err := redis_handler.RedisClient.HGet(redis_handler.Ctx, "sessions", name).Result()
+
 	if err != nil {
 		return ""
 	}
@@ -32,10 +33,12 @@ func Set_Current_Game(name string, game_id string) error {
 	if session_game_id != "" {
 		exists, err := redis_handler.RedisClient.Exists(redis_handler.Ctx, session_game_id).Result()
 		if exists == 1 {
-			err := redis_handler.RedisClient.RPush(redis_handler.Ctx, session_game_id+"-players", name).Err()
+			game_id = session_game_id
 			if err != nil {
 				return err
 			}
+		} else {
+			redis_handler.RedisClient.HDel(redis_handler.Ctx, "sessions", name)
 
 		}
 		if err != nil {
@@ -45,6 +48,11 @@ func Set_Current_Game(name string, game_id string) error {
 	}
 
 	err := redis_handler.RedisClient.RPush(redis_handler.Ctx, game_id+"-players", name).Err()
+	if err != nil {
+		return err
+	}
+
+	err = game.Assign_Player(name, game_id)
 	if err != nil {
 		return err
 	}
@@ -59,9 +67,15 @@ func Unset_Current_Game(name string) error {
 	num_players, _ := redis_handler.RedisClient.LLen(redis_handler.Ctx, game_id+"-players").Result()
 
 	if num_players == 0 {
+		players, _ := redis_handler.RedisClient.HMGet(redis_handler.Ctx, game_id, "P1", "P2").Result()
+		for _, p := range players {
+			if p_str, ok := p.(string); ok {
+				redis_handler.RedisClient.HDel(redis_handler.Ctx, "sessions", p_str)
+			}
+		}
+
 		redis_handler.RedisClient.Del(redis_handler.Ctx, game_id)
-		redis_handler.RedisClient.HDel(redis_handler.Ctx, "sessions", name)
+
 	}
-	fmt.Println("User removed.")
 	return nil
 }
