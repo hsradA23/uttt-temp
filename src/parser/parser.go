@@ -3,21 +3,16 @@ package parser
 import (
 	"fmt"
 	"strings"
+	"uttt/src/game"
 	"uttt/src/session"
 )
 
 func Handle_Message(player_name string, msg string) {
-	_ = session.Get_Game_By_Name(player_name)
+	game_id := session.Get_Game_By_Name(player_name)
 	if strings.HasPrefix(msg, "move") {
-		tokens := strings.Split(msg, " ")
-		if len(tokens) < 3 {
-			return
+		err := game.Move(game_id, player_name, msg)
+		if err != nil {
+			fmt.Println(err)
 		}
-		move(tokens[1], tokens[2])
 	}
-
-}
-
-func move(board string, cell string) {
-	fmt.Printf("%s: %s", board, cell)
 }

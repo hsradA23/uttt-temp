@@ -1,13 +1,11 @@
 package game
 
 import (
-	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	redis_handler "uttt/src/redis-handler"
-
-	"github.com/redis/go-redis/v9"
 )
 
 func New_game(name string) {
@@ -46,7 +44,42 @@ func Assign_Player(name string, game_id string) error {
 	return errors.New("Cannot assign a new player to the game.")
 }
 
-func Move(client redis.Client, ctx context.Context, movestr string) bool {
+func Move(game_id, player_name, movestr string) error {
+	// move board cell
+	board, _ := redis_handler.RedisClient.HGetAll(redis_handler.Ctx, game_id).Result()
 
-	return true
+	var move string
+	var next_player string
+
+	if board["P1"] == player_name {
+		move = "1"
+		next_player = "2"
+	} else if board["P2"] == player_name {
+		move = "2"
+		next_player = "1"
+	}
+
+	// Check if the current player is supposed to move
+	if board["turn"] != move {
+		return errors.New("The player is not supposed to move")
+	}
+
+	tokens := strings.Split(movestr, " ")
+	target_board := tokens[1]
+	target_cell := tokens[2]
+	cell_id := fmt.Sprintf("board-%s%s", target_board, target_cell)
+
+	// Check if the board is valid
+	if board["board"] != "-1" && board["board"] != target_board {
+		return errors.New("The player is not supposed to play in the board.")
+	}
+
+	// Check if cell is already full
+	if board[cell_id] != "0" {
+		return errors.New("Cell already full")
+	}
+
+	redis_handler.RedisClient.HSet(redis_handler.Ctx, game_id, cell_id, move, "board", target_cell, "turn", next_player)
+
+	return nil
 }
