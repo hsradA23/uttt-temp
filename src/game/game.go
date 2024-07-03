@@ -44,7 +44,7 @@ func Assign_Player(name string, game_id string) error {
 	return errors.New("Cannot assign a new player to the game.")
 }
 
-func Move(game_id, player_name, movestr string) error {
+func Move(game_id, player_name, movestr string) (string, error) {
 	// move board cell
 	board, _ := redis_handler.RedisClient.HGetAll(redis_handler.Ctx, game_id).Result()
 
@@ -61,7 +61,7 @@ func Move(game_id, player_name, movestr string) error {
 
 	// Check if the current player is supposed to move
 	if board["turn"] != move {
-		return errors.New("The player is not supposed to move")
+		return "", errors.New("The player is not supposed to move")
 	}
 
 	tokens := strings.Split(movestr, " ")
@@ -71,15 +71,17 @@ func Move(game_id, player_name, movestr string) error {
 
 	// Check if the board is valid
 	if board["board"] != "-1" && board["board"] != target_board {
-		return errors.New("The player is not supposed to play in the board.")
+		return "", errors.New("The player is not supposed to play in the board.")
 	}
 
 	// Check if cell is already full
 	if board[cell_id] != "0" {
-		return errors.New("Cell already full")
+		return "", errors.New("Cell already full")
 	}
 
 	redis_handler.RedisClient.HSet(redis_handler.Ctx, game_id, cell_id, move, "board", target_cell, "turn", next_player)
 
-	return nil
+	// If everything goes well
+	// we return "move board cell P1"
+	return fmt.Sprintf("%s P%s", movestr, move), nil
 }

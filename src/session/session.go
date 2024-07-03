@@ -16,6 +16,11 @@ func Get_Game_By_Name(name string) string {
 	return game_id
 }
 
+func Get_Players_By_Game(game_id string) []string {
+	players, _ := redis_handler.RedisClient.LRange(redis_handler.Ctx, game_id+"-players", 0, -1).Result()
+	return players
+}
+
 func Set_Current_Game(name string, game_id string) error {
 	players, _ := redis_handler.RedisClient.LRange(redis_handler.Ctx, game_id+"-players", 0, -1).Result()
 	if len(players) >= 2 {
