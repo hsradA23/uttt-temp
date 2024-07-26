@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  uttt:
+    image: uttt
+    container_name: uttt
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+
+    environment:
+      IN_DOCKER: "TRUE"
+
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --url http://uttt:5000
+    # volumes:
+    #   - ./cloudflared:/etc/cloudflared
+    restart: unless-stopped
+    depends_on:
+      - uttt

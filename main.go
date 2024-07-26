@@ -62,5 +62,6 @@ func main() {
 		router.Disconnect(player_name)
 	})
 
+	fmt.Println("Starting server on port 5000")
 	http.ListenAndServe(":5000", nil)
 }
