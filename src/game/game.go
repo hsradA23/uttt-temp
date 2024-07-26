@@ -31,7 +31,10 @@ func New_game(name string) {
 func Assign_Player(name string, game_id string) error {
 	// P1 is X
 	// P2 is O
-	players, _ := redis_handler.RedisClient.HMGet(redis_handler.Ctx, game_id, "P1", "P2").Result()
+	players, err := redis_handler.RedisClient.HMGet(redis_handler.Ctx, game_id, "P1", "P2").Result()
+	if err != nil {
+		return err
+	}
 
 	if players[0] == nil || players[0] == name {
 		redis_handler.RedisClient.HSet(redis_handler.Ctx, game_id, "P1", name)
@@ -46,7 +49,10 @@ func Assign_Player(name string, game_id string) error {
 
 func Move(game_id, player_name, movestr string) (string, error) {
 	// move board cell
-	board, _ := redis_handler.RedisClient.HGetAll(redis_handler.Ctx, game_id).Result()
+	board, err := redis_handler.RedisClient.HGetAll(redis_handler.Ctx, game_id).Result()
+	if err != nil {
+		return "", errors.New("[Internal server error] Game does not exist.")
+	}
 
 	var move string
 	var next_player string
@@ -57,6 +63,11 @@ func Move(game_id, player_name, movestr string) (string, error) {
 	} else if board["P2"] == player_name {
 		move = "2"
 		next_player = "1"
+	}
+
+	// Check if the second player has not joined
+	if board[fmt.Sprintf("P%s", next_player)] == "" {
+		return "", errors.New("Second player has not joined yet.")
 	}
 
 	// Check if the current player is supposed to move
@@ -79,6 +90,8 @@ func Move(game_id, player_name, movestr string) (string, error) {
 		return "", errors.New("Cell already full")
 	}
 
+	// TODO: Check if the board has already been won by one player
+	// TODO: Check if the board ended up in a draw
 	redis_handler.RedisClient.HSet(redis_handler.Ctx, game_id, cell_id, move, "board", target_cell, "turn", next_player)
 
 	// If everything goes well
