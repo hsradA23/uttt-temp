@@ -86,8 +86,8 @@ func Move(game_id, player_name, movestr string) (string, error) {
 	}
 
 	// Check if cell is already full
-	if board[cell_id] != "0" {
-		return "", errors.New("Cell already full")
+	if board[cell_id] != "0" || board[fmt.Sprintf("board-%s", target_board)] != "0" {
+		return "", errors.New(fmt.Sprintf("[DEBUG] [GameID %s] Cell already full", game_id))
 	}
 
 	// TODO: Check if the board has already been won by one player
