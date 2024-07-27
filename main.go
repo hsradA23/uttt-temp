@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"uttt/src/parser"
 	"uttt/src/router"
@@ -23,6 +24,9 @@ func main() {
 	http.HandleFunc("/get_game", func(w http.ResponseWriter, r *http.Request) {
 		enableCors(&w)
 		player_name := r.URL.Query().Get("Name")
+		if player_name == "" {
+			return
+		}
 		game_id := session.Get_Game_By_Name(player_name)
 		fmt.Fprintf(w, game_id)
 		fmt.Println("Sent response for ", game_id)
@@ -49,11 +53,14 @@ func main() {
 				func(sfilter *melody.Session) bool { return sfilter == s })
 
 		} else {
+			messages := strings.Split(resp, ";")
 			game_id := session.Get_Game_By_Name(player_name)
 			players := session.Get_Players_By_Game(game_id)
 			send_to := s.Request.URL.Query().Get("Name")
-			sessionManager.MelodySession.BroadcastFilter([]byte(resp),
-				func(s *melody.Session) bool { return send_to == players[0] || send_to == players[1] })
+			for _, message := range messages {
+				sessionManager.MelodySession.BroadcastFilter([]byte(message),
+					func(s *melody.Session) bool { return send_to == players[0] || send_to == players[1] })
+			}
 		}
 	})
 

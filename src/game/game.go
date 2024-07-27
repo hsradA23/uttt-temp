@@ -92,9 +92,32 @@ func Move(game_id, player_name, movestr string) (string, error) {
 
 	// TODO: Check if the board has already been won by one player
 	// TODO: Check if the board ended up in a draw
-	redis_handler.RedisClient.HSet(redis_handler.Ctx, game_id, cell_id, move, "board", target_cell, "turn", next_player)
+	board[cell_id] = move
+	winner := Check_Board_Win(target_board, board)
+	message := fmt.Sprintf("%s P%s", movestr, move)
+
+	var nxt string // Next board
+	if board[fmt.Sprintf("board-%s", target_cell)] != "0" {
+		nxt = "-1"
+	} else {
+		nxt = target_cell
+	}
+
+	if winner != "" {
+		fmt.Println("[DEBUG] Game won by P", winner)
+		if target_board == target_cell {
+			nxt = "-1"
+		}
+		redis_handler.RedisClient.HSet(redis_handler.Ctx, game_id, cell_id, move, "board", nxt, "turn",
+			next_player, fmt.Sprintf("board-%s", target_board), move)
+		message += fmt.Sprintf(";boardwin %s P%s", target_board, move)
+	} else {
+		redis_handler.RedisClient.HSet(redis_handler.Ctx, game_id, cell_id, move, "board", nxt, "turn",
+			next_player)
+	}
 
 	// If everything goes well
 	// we return "move board cell P1"
-	return fmt.Sprintf("%s P%s", movestr, move), nil
+	// and if board completes 'boardwin 2'
+	return message, nil
 }
