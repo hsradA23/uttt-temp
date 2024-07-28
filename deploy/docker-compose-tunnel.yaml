@@ -6,8 +6,8 @@ services:
     container_name: uttt
     restart: unless-stopped
     build:
-      context: .
-      dockerfile: ./Dockerfile
+      context: ..
+      dockerfile: deploy/Dockerfile
 
     environment:
       IN_DOCKER: "TRUE"
