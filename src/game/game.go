@@ -3,6 +3,7 @@ package game
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	redis_handler "uttt/src/redis-handler"
@@ -25,7 +26,8 @@ func New_game(name string) {
 	game_data["board"] = "-1"
 	redis_handler.RedisClient.HSet(redis_handler.Ctx, name, game_data)
 
-	fmt.Println("Created new game.")
+	log.Printf("Created new game - %s\n", name)
+
 }
 
 func Assign_Player(name string, game_id string) error {
@@ -104,7 +106,7 @@ func Move(game_id, player_name, movestr string) (string, error) {
 	}
 
 	if winner != "" {
-		fmt.Println("[DEBUG] Game won by P", winner)
+		log.Println("[DEBUG] Game won by P", winner)
 		if target_board == target_cell {
 			nxt = "-1"
 		}

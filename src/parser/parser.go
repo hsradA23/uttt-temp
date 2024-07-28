@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"fmt"
+	"log"
 	"strings"
 	"uttt/src/game"
 	"uttt/src/session"
@@ -14,7 +14,7 @@ func Handle_Message(player_name string, msg string) (string, error) {
 	if strings.HasPrefix(msg, "move") {
 		resp, err = game.Move(game_id, player_name, msg)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return "", err
 		}
 	}

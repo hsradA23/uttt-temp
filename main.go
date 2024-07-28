@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -29,7 +30,6 @@ func main() {
 		}
 		game_id := session.Get_Game_By_Name(player_name)
 		fmt.Fprintf(w, game_id)
-		fmt.Println("Sent response for ", game_id)
 	})
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +69,6 @@ func main() {
 		router.Disconnect(player_name)
 	})
 
-	fmt.Println("Starting server on port 5000")
+	log.Println("Starting server on port 5000")
 	http.ListenAndServe(":5000", nil)
 }

@@ -2,10 +2,10 @@ package router
 
 import (
 	"fmt"
+	"log"
 	"math/rand/v2"
 
 	"uttt/src/game"
-
 	"uttt/src/session"
 )
 
@@ -18,9 +18,9 @@ func New_connection(player_name string, game_id string) error {
 		game.New_game(game_id)
 		err := session.Set_Current_Game(player_name, game_id)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Println(err.Error())
 		} else {
-			fmt.Printf("New game for user created\n")
+			log.Printf("[INFO] New game for user=%s created\n", player_name)
 		}
 
 	} else {
@@ -28,7 +28,7 @@ func New_connection(player_name string, game_id string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("User already connected to %s\n", game_id)
+		log.Printf("User already connected to %s\n", game_id)
 	}
 	return nil
 }
