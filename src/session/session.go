@@ -73,6 +73,7 @@ func Set_Current_Game(name string, game_id string) error {
 		return err
 	}
 
+	log.Printf("Player %s assigned to game %s", name, game_id)
 	return redis_handler.RedisClient.HSet(redis_handler.Ctx, "sessions", name, game_id).Err()
 }
 

@@ -14,7 +14,7 @@ func Handle_Message(player_name string, msg string) (string, error) {
 	if strings.HasPrefix(msg, "move") {
 		resp, err = game.Move(game_id, player_name, msg)
 		if err != nil {
-			log.Println(err)
+			log.Printf("Invalid move detected [Game:%s Player:%s] : %s", game_id, player_name, err)
 			return "", err
 		}
 	}
